@@ -5,7 +5,7 @@ dungeonEntranceCard.name = "dungeonEntranceCard"
 dungeonEntrance.name = "dungeonEntrance"
 dungeonEntrance.pictures =
 {
-  filename = "__mPrDungeonMod__/graphics/dungeonEntrance.png",
+  filename = "__DungeonMod__/graphics/dungeonEntrance.png",
   priority = "extra-high",
   width = 166,
   height = 122,

@@ -2,7 +2,7 @@ data:extend({
     {
       type = "item",
       name = "dungeonEntranceCard",
-      icon = "__mPrDungeonMod__/prototypes/items/dungeonEntranceCard.png",
+      icon = "__DungeonMod__/prototypes/items/dungeonEntranceCard.png",
       icon_size = 64,
       icon_mipmaps = 4,
       subgroup = "science-pack",
