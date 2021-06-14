@@ -1,4 +1,5 @@
 local dungeonEntrance = table.deepcopy(data.raw["tree"]["dead-grey-trunk"])
+
 local dungeonEntranceCard = table.deepcopy(data.raw["item"]["wood"])
 dungeonEntranceCard.name = "dungeonEntranceCard"
 
@@ -34,3 +35,6 @@ dungeonEntrance.minable = {
     }
 dungeonEntrance.remains_when_mined ="dungeonEntrance"
 data:extend({dungeonEntrance})
+local dungeonExit = table.deepcopy(data.raw["tree"]["dungeonEntrance"])
+dungeonExit.name = "dungeonExit"
+data:extend({dungeonExit})
