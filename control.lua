@@ -7,6 +7,7 @@ last_position_y={}
 
 
 event.on_init(function()
+	local j = 0
 	game.surfaces["nauvis"].create_entity{name="dungeonEntrance", position={1, 1}, force="neutral"} --how is the map built up? max coordinates??
 	for i = 0, 100, 1 do
 		game.surfaces["nauvis"].create_entity{name="dungeonEntrance", position={math.random(-1000, 1000),math.random(-1000, 1000)}, force="neutral"} --how is the map built up? max coordinates??
@@ -16,27 +17,37 @@ event.on_init(function()
   	global.dungeonSurface.freeze_daytime = true
 	global.dungeonSurface.solar_power_multiplier = 0
 	global.dungeonSurface.generate_with_lab_tiles = true
-	for i = -8, 100, 1 do
-		global.dungeonSurface.create_entity{name = "cliff", position = {i, -10}, force ="neutral", direction = defines.direction.north}
-		global.dungeonSurface.create_entity{name = "cliff", position = {i, 10}, force ="neutral", direction = defines.direction.north}
+	--for i = -8, 100, 4 do
+		--global.dungeonSurface.create_entity{name = "cliff", position = {i, -10}, force ="neutral", direction = defines.direction.north}
+		--global.dungeonSurface.create_entity{name = "cliff", position = {i, 10}, force ="neutral", direction = defines.direction.north}
+	--end
+		--global.dungeonSurface.create_entity{name = "cliff", position = {-10, -10}, force ="neutral", direction = defines.direction.northwest}
+		--global.dungeonSurface.create_entity{name = "cliff", position = {-10, 10}, force ="neutral", direction = defines.direction.northeast}
+	--for i = -10, 10, 4 do 
+		--global.dungeonSurface.create_entity{name = "cliff", position = {-10, i}, force ="neutral", direction = defines.direction.southwest}
+	--end
+	for i = -9, 100, 1 do
+		global.dungeonSurface.create_entity{name = "imbaStoneWall", position = {i, -10}, force = "enemy"}
+		global.dungeonSurface.create_entity{name = "imbaStoneWall", position = {i, 10}, force = "enemy"}
 	end
-		global.dungeonSurface.create_entity{name = "cliff", position = {-10, -10}, force ="neutral", direction = defines.direction.northwest}
-		global.dungeonSurface.create_entity{name = "cliff", position = {-10, 10}, force ="neutral", direction = defines.direction.northeast}
 	for i = -10, 10, 1 do 
-		global.dungeonSurface.create_entity{name = "cliff", position = {-10, i}, force ="neutral", direction = defines.direction.southwest}
+		global.dungeonSurface.create_entity{name = "imbaStoneWall", position = {-10, i}, force ="enemy", direction = defines.direction.south}
 	end
 
-	--TESTCLIFFS
-	global.dungeonSurface.create_entity{name = "cliff", position = {20, 20}, force ="neutral", direction = defines.direction.north}
-	global.dungeonSurface.create_entity{name = "cliff", position = {30, 20}, force ="neutral", direction = defines.direction.northeast}
-	global.dungeonSurface.create_entity{name = "cliff", position = {30, 30}, force ="neutral", direction = defines.direction.east}
-	global.dungeonSurface.create_entity{name = "cliff", position = {30, 40}, force ="neutral", direction = defines.direction.southeast}
-	global.dungeonSurface.create_entity{name = "cliff", position = {20, 40}, force ="neutral", direction = defines.direction.south}
-	global.dungeonSurface.create_entity{name = "cliff", position = {10, 40}, force ="neutral", direction = defines.direction.southwest}
-	global.dungeonSurface.create_entity{name = "cliff", position = {10, 30}, force ="neutral", direction = defines.direction.west}
-	global.dungeonSurface.create_entity{name = "cliff", position = {10, 20}, force ="neutral", direction = defines.direction.northwest}
+	--TESTCLIFFS, BIG CLIFFS
+	local x = 20
+	local y = 20
+	global.dungeonSurface.create_entity{name = "cliff", position = {x, y}, force ="neutral", direction = defines.direction.north}
+	global.dungeonSurface.create_entity{name = "cliff", position = {x+10, y}, force ="neutral", direction = defines.direction.northeast}
+	global.dungeonSurface.create_entity{name = "cliff", position = {x+10, y+10}, force ="neutral", direction = defines.direction.east}
+	global.dungeonSurface.create_entity{name = "cliff", position = {x+10, y+20}, force ="neutral", direction = defines.direction.southeast}
+	global.dungeonSurface.create_entity{name = "cliff", position = {x, y+20}, force ="neutral", direction = defines.direction.south}
+	global.dungeonSurface.create_entity{name = "cliff", position = {x-10, y+20}, force ="neutral", direction = defines.direction.southwest}
+	global.dungeonSurface.create_entity{name = "cliff", position = {x-10, y+10}, force ="neutral", direction = defines.direction.west}
+	global.dungeonSurface.create_entity{name = "cliff", position = {x-10, y}, force ="neutral", direction = defines.direction.northwest}
 
 	--global.dungeonSurface.map_gen_settings = ??
+	
 end)
 event.on_tick(function()
 	for i, thisAccumulator in pairs(game.surfaces["nauvis"].find_entities_filtered({type = "accumulator"})) do
@@ -47,9 +58,16 @@ event.on_tick(function()
 	return
 	end
 end)
-
+event.on_entity_died(function(e)
+	game.print("destroyed something")
+	if (e.entity.name =="imbaStoneWall") then
+		game.print("destroyed wall")
+		global.dungeonSurface.create_entity{name = e.entity.name, position = {e.entity.position.x,e.entity.position.y}, force =e.entity.force,direction= e.entity.direction}
+	end 
+end)
 script.on_event("my-custom-input", function(event) -- Hotkey K for creating dungeon entrance near player to test
 	game.print("Create Dungeon entrance at player position")
+	
 	for i,player in pairs(game.players) do
 		local xPlus = math.random(-50,50)
 		local yPlus = math.random(-50,50)
@@ -65,6 +83,10 @@ event.on_pre_player_mined_item(function(e)
 	
 	local player = game.players[e.player_index]
 	if e.entity.name == "dungeonEntrance" then
+		player.get_main_inventory().insert({name = "shotgun", count = 1})
+		player.get_main_inventory().insert({name = "shotgun-shell", count = 100})
+		player.get_main_inventory().insert({name = "rocket-launcher", count = 1})
+		player.get_main_inventory().insert({name = "explosive-rocket", count = 100})
 		last_position[e.player_index] = player.position
 		game.print(player.name .. " is entering dungeon.")
 		
