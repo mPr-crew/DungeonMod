@@ -4,10 +4,23 @@ local gui = require("__flib__.gui-beta")
 local migration = require("__flib__.migration")
 
 last_position = {}
-last_position_x={}
-last_position_y={}
 
+event.on_nth_tick(500, function(e)
+	--game.print("nth-tick")
+	for i, thisAccumulator in pairs(game.surfaces["nauvis"].find_entities_filtered({type = "accumulator"})) do
+		-- game.print(thisAccumulator.energy .. " --> [gps=" .. thisAccumulator.position.x .. "," .. thisAccumulator.position.y .. "]")
+		if thisAccumulator.energy /50000 < 20 then -- 5.000.000 is max energy of accumulator * 100 -> %
+			game.print("WO STROM???",{r=1, g=0, b=0, a=1})
+		end
+	return
+	end
+	local actualPollution = game.surfaces["nauvis"].get_total_pollution()
+	if actualPollution > 10000 then
+		local worldBoss = game.surfaces["nauvis"].create_entity{name="worldBoss1", position={math.random(-1000, 1000),math.random(-1000, 1000)}, force="enemy"} 
+		-- worldBoss
+	end
 
+end)
 event.on_init(function()
 	local j = 0
 	game.surfaces["nauvis"].create_entity{name="dungeonEntrance", position={1, 1}, force="neutral"} --how is the map built up? max coordinates??
@@ -51,15 +64,8 @@ event.on_init(function()
 	--global.dungeonSurface.map_gen_settings = ??
 	
 end)
---event.on_tick(function()
-	--for i, thisAccumulator in pairs(game.surfaces["nauvis"].find_entities_filtered({type = "accumulator"})) do
-		--game.print(thisAccumulator.energy)
-		--if thisAccumulator.energy /50000 < 20 then -- 5.000.000 is max energy of accumulator * 100 -> %
-		--	game.print("WO STROM???",{r=1, g=0, b=0, a=1})
-		--end
-	--return
-	--end
---end)
+
+
 event.on_entity_died(function(e)
 	game.print("destroyed something")
 	if (e.entity.name =="imbaStoneWall") then
@@ -96,6 +102,7 @@ event.on_pre_player_mined_item(function(e)
 		inv.remove({name="dungeonEntranceCard", count=1})
 		InsertTurrets(player)
 		InsertSmallBiters(player)
+		player.unlock_achievement("enterADungeonAchievement1")
 		
 	elseif e.entity.name == "dungeonExit" then
 		game.print(player.name .. " is exiting dungeon.")

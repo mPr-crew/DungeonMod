@@ -5,3 +5,5 @@ require("prototypes.dungeonEntranceCard")
 
 require("prototypes.imbaStructures")
 require("prototypes.imbaUnits")
+
+require("prototypes.achievements")
