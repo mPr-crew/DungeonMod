@@ -4,6 +4,9 @@ local dungeonEntranceCard = table.deepcopy(data.raw["item"]["wood"])
 dungeonEntranceCard.name = "dungeonEntranceCard"
 
 dungeonEntrance.name = "dungeonEntrance"
+dungeonEntrance.collision_box = {{-2, -1.9}, {2.5, 2}}
+dungeonEntrance.drawing_box = {{-2, -2}, {2, 2}}
+dungeonEntrance.selection_box = {{-2, -2}, {2, 2}}
 dungeonEntrance.pictures =
 {
   filename = "__DungeonMod__/graphics/dungeonEntrance.png",
