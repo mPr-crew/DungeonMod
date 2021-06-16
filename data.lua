@@ -7,3 +7,4 @@ require("prototypes.imbaStructures")
 require("prototypes.imbaUnits")
 
 require("prototypes.achievements")
+require("prototypes.research")

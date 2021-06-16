@@ -3,9 +3,15 @@ local event = require("__flib__.event")
 local gui = require("__flib__.gui-beta")
 local migration = require("__flib__.migration")
 
+---BALANCE PARAMETERS
+local worldBoss1SpawnPollution = 10000
+
+
+local worldBoss1Spawned = false
+global.worldBoss = nil
 last_position = {}
 
-event.on_nth_tick(500, function(e)
+event.on_nth_tick(200, function(e)
 	--game.print("nth-tick")
 	for i, thisAccumulator in pairs(game.surfaces["nauvis"].find_entities_filtered({type = "accumulator"})) do
 		-- game.print(thisAccumulator.energy .. " --> [gps=" .. thisAccumulator.position.x .. "," .. thisAccumulator.position.y .. "]")
@@ -14,13 +20,56 @@ event.on_nth_tick(500, function(e)
 		end
 	return
 	end
-	local actualPollution = game.surfaces["nauvis"].get_total_pollution()
-	if actualPollution > 10000 then
-		local worldBoss = game.surfaces["nauvis"].create_entity{name="worldBoss1", position={math.random(-1000, 1000),math.random(-1000, 1000)}, force="enemy"} 
-		-- worldBoss
+	if global.worldBoss ~= nil then
+		--global.worldBoss.set_command({
+			--type = defines.command.attack_area,
+			--radius = 200,
+			--destination = {0,0},
+			--distraction = defines.distraction.by_anything
+			--})
+		if game.players[1].force.technologies["researchWorldBossPing"].researched then
+			if #game.surfaces["nauvis"].find_entities_filtered({type = "radar"}) >= 1 then
+				game.print("World Boss Location: [gps=" .. global.worldBoss.position.x .. "," .. global.worldBoss.position.y .. "]")
+			end
+		end
+	else
+		local actualPollution = game.surfaces["nauvis"].get_total_pollution()
+			
+		if (actualPollution > worldBoss1SpawnPollution and worldBoss1Spawned == false) then
+			local xSpawn = 0
+			local ySpawn = 0
+			local spawnLocation
+			local spawntile
+			repeat 
+				spawnLocation = randomizeSpawnLocation()
+				spawntile = game.surfaces["nauvis"].get_tile(spawnLocation)
+			until (spawntile.valid and spawntile.collides_with("player-layer") == false) 
+			game.print("Pollution is so high that a massive alien was spawned into this world. Get ready to fight!",{r=1, g=0, b=0, a=1})
+			game.print("World Boss Spawn Location [gps=" .. spawnLocation[1] .. "," .. spawnLocation[2] .. "]")
+			global.worldBoss = game.surfaces["nauvis"].create_entity{name="worldBoss1", position=spawnLocation, force="enemy"} 
+			worldBoss1Spawned = true
+			global.worldBoss.set_command({
+			type = defines.command.attack_area,
+			radius = 200,
+			destination = {0,0},
+			distraction = defines.distraction.by_anything
+			})
+		end
 	end
 
 end)
+function randomizeSpawnLocation()
+	repeat 
+		xSpawn = math.random(-1000, 1000)
+		--game.print("Randomizing x: " .. xSpawn)
+	until (xSpawn > 250 or xSpawn < -250)
+	repeat 
+		ySpawn = math.random(-1000, 1000)
+		--game.print("Randomizing y: " .. ySpawn)
+	until (ySpawn > 250 or ySpawn < -250)
+	local position = {xSpawn, ySpawn}
+	return position
+end
 event.on_init(function()
 	local j = 0
 	game.surfaces["nauvis"].create_entity{name="dungeonEntrance", position={1, 1}, force="neutral"} --how is the map built up? max coordinates??
