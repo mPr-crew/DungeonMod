@@ -45,7 +45,8 @@ local worldBoss1tint2 = {r=0, g=0, b=0, a=1}
 worldBoss1.name = "worldBoss1"
 worldBoss1.max_health = 100000
 worldBoss1.healing_per_tick = 1
-worldBoss1.emissions_per_second = 1000
+worldBoss1.emissions_per_second = 1
+worldBoss1.call_for_help_radius = 1000
 worldBoss1.scale = 100
 worldBoss1.attack_parameters =
     {
@@ -59,8 +60,11 @@ worldBoss1.attack_parameters =
       range_mode = "bounding-box-to-bounding-box"
     }
 worldBoss1.run_animation = biterrunanimation(worldBoss1Scale, worldBoss1tint1, worldBoss1tint2)
-worldBoss1.collision_box = {{-1.5, -1.5}, {1.5, 1.5}}
-worldBoss1.selection_box = {{-1.5, -1.5}, {1.5, 1.5}}
+worldBoss1.collision_box = {{-5, -5}, {5, 5}}
+worldBoss1.collision_mask = {}
+worldBoss1.selection_box = {{-5, -5}, {5, 5}}
 worldBoss1.water_reflection = biter_water_reflection(3)
 worldBoss1.ai_controllable = false
+worldBoss1.allow_try_return_to_spawner = false
+worldBoss1.allow_destroy_when_commands_fail = false
 data:extend({worldBoss1})

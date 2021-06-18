@@ -5,69 +5,98 @@ local migration = require("__flib__.migration")
 
 ---BALANCE PARAMETERS
 local worldBoss1SpawnPollution = 10000
-
-
 local worldBoss1Spawned = false
 global.worldBoss = nil
+global.worldBossUnitGroup = nil
+
 last_position = {}
 
-event.on_nth_tick(200, function(e)
+event.on_nth_tick(100, function(e)
 	--game.print("nth-tick")
-	for i, thisAccumulator in pairs(game.surfaces["nauvis"].find_entities_filtered({type = "accumulator"})) do
+	--for i, thisAccumulator in pairs(game.surfaces["nauvis"].find_entities_filtered({type = "accumulator"})) do
 		-- game.print(thisAccumulator.energy .. " --> [gps=" .. thisAccumulator.position.x .. "," .. thisAccumulator.position.y .. "]")
-		if thisAccumulator.energy /50000 < 20 then -- 5.000.000 is max energy of accumulator * 100 -> %
+		--if thisAccumulator.energy /50000 < 20 then -- 5.000.000 is max energy of accumulator * 100 -> %
 			game.print("WO STROM???",{r=1, g=0, b=0, a=1})
-		end
-	return
-	end
+		--end
+	--break
+	--end
 	if global.worldBoss ~= nil then
-		--global.worldBoss.set_command({
+		--game.print(global.worldBossUnitGroup.state)
+		--global.worldBossUnitGroup.start_moving()
+		--if (e.tick%1000 == 0) then 
+			--global.worldBossUnitGroup.set_command({
 			--type = defines.command.attack_area,
-			--radius = 200,
+			--radius = 1000,
 			--destination = {0,0},
-			--distraction = defines.distraction.by_anything
+			--distraction = defines.distraction.by_enemy
 			--})
+		--end
 		if game.players[1].force.technologies["researchWorldBossPing"].researched then
 			if #game.surfaces["nauvis"].find_entities_filtered({type = "radar"}) >= 1 then
 				game.print("World Boss Location: [gps=" .. global.worldBoss.position.x .. "," .. global.worldBoss.position.y .. "]")
 			end
 		end
 	else
-		local actualPollution = game.surfaces["nauvis"].get_total_pollution()
-			
+		local actualPollution = game.surfaces[1].get_total_pollution()
+			game.print ("Actual pollution now is " .. actualPollution)
 		if (actualPollution > worldBoss1SpawnPollution and worldBoss1Spawned == false) then
-			local xSpawn = 0
-			local ySpawn = 0
-			local spawnLocation
-			local spawntile
-			repeat 
-				spawnLocation = randomizeSpawnLocation()
-				spawntile = game.surfaces["nauvis"].get_tile(spawnLocation)
-			until (spawntile.valid and spawntile.collides_with("player-layer") == false) 
+			--local spawnLocation = randomizeSpawnLocation()
 			game.print("Pollution is so high that a massive alien was spawned into this world. Get ready to fight!",{r=1, g=0, b=0, a=1})
-			game.print("World Boss Spawn Location [gps=" .. spawnLocation[1] .. "," .. spawnLocation[2] .. "]")
-			global.worldBoss = game.surfaces["nauvis"].create_entity{name="worldBoss1", position=spawnLocation, force="enemy"} 
-			worldBoss1Spawned = true
+			--game.print("World Boss Spawn Location [gps=" .. spawnLocation[1] .. "," .. spawnLocation[2] .. "]")
+			local searchRadius = 100
+			local playerPosition = game.players[1].position;
+			game.print("searching nearest biter spawner for player position")
+			local spawner
+			local i = 0
+			repeat
+				i = i + 1
+				game.print("search No. " .. i)
+				spawner = game.surfaces[1].find_entities_filtered{area={{playerPosition.x-searchRadius,playerPosition.y-searchRadius},{playerPosition.x+searchRadius,playerPosition.y+searchRadius}}, type="unit-spawner"};
+				game.print("Found " .. #spawner .. " spawners")
+				if (searchRadius == 20000) then 
+					game.print("Cannot find spawner")
+					break 
+				end
+				if (#spawner == 0) then 
+					game.print("Increasing search radius") 
+					searchRadius = searchRadius + 100
+				end
+			until (#spawner > 0)
+			game.print("Spawning World Boss")
+			global.worldBoss = game.surfaces["nauvis"].create_entity{name="worldBoss1", position=spawner[1].position, force="enemy"} 
 			global.worldBoss.set_command({
-			type = defines.command.attack_area,
-			radius = 200,
-			destination = {0,0},
-			distraction = defines.distraction.by_anything
-			})
+				type = defines.command.attack_area,
+				radius = 10,
+				destination = {-1,1},
+				distraction = defines.distraction.by_enemy
+				})
+			global.worldBossUnitGroup = game.surfaces[1].create_unit_group{position = spawner[1].position, force = "enemy"} 
+			global.worldBossUnitGroup.add_member(global.worldBoss)
+			game.print("worldBossUnitGroup has " .. #global.worldBossUnitGroup.members .. " members")
+			global.worldBossUnitGroup.set_autonomous()
+			--global.worldBossUnitGroup.start_moving()
+			worldBoss1Spawned = true
 		end
 	end
 
 end)
 function randomizeSpawnLocation()
-	repeat 
-		xSpawn = math.random(-1000, 1000)
-		--game.print("Randomizing x: " .. xSpawn)
-	until (xSpawn > 250 or xSpawn < -250)
-	repeat 
-		ySpawn = math.random(-1000, 1000)
-		--game.print("Randomizing y: " .. ySpawn)
-	until (ySpawn > 250 or ySpawn < -250)
-	local position = {xSpawn, ySpawn}
+	local spawntile
+	local xSpawn
+	local ySpawn
+	local position
+	repeat
+		repeat 
+			xSpawn = math.random(-1000, 1000)
+			--game.print("Randomizing x: " .. xSpawn)
+		until (xSpawn > 250 or xSpawn < -250)
+		repeat 
+			ySpawn = math.random(-1000, 1000)
+			--game.print("Randomizing y: " .. ySpawn)
+		until (ySpawn > 250 or ySpawn < -250)
+		position = {xSpawn, ySpawn}
+		spawntile = game.surfaces["nauvis"].get_tile(position)
+	until (spawntile.valid and spawntile.collides_with("player-layer") == false)
 	return position
 end
 event.on_init(function()
