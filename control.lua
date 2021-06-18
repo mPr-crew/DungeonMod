@@ -16,7 +16,7 @@ event.on_nth_tick(100, function(e)
 	--for i, thisAccumulator in pairs(game.surfaces["nauvis"].find_entities_filtered({type = "accumulator"})) do
 		-- game.print(thisAccumulator.energy .. " --> [gps=" .. thisAccumulator.position.x .. "," .. thisAccumulator.position.y .. "]")
 		--if thisAccumulator.energy /50000 < 20 then -- 5.000.000 is max energy of accumulator * 100 -> %
-			game.print("WO STROM???",{r=1, g=0, b=0, a=1})
+			--game.print("WO STROM???",{r=1, g=0, b=0, a=1})
 		--end
 	--break
 	--end
