@@ -30,7 +30,7 @@ event.on_nth_tick(100, function(e)
 		--end
 	--break
 	--end
-	game.print(global.worldBoss)
+	--game.print(global.worldBoss)
 	if global.worldBoss ~= nil then
 		--game.print(global.worldBossUnitGroup.state)
 		--global.worldBossUnitGroup.start_moving()
@@ -49,7 +49,7 @@ event.on_nth_tick(100, function(e)
 		end
 	else
 		local actualPollution = game.surfaces[1].get_total_pollution()
-			game.print ("Actual pollution now is " .. actualPollution)
+			--game.print ("Actual pollution now is " .. actualPollution)
 		if (actualPollution > worldBoss1SpawnPollution and worldBossSpawned[1] == false) then
 			global.worldBoss = spawnWorldboss(1)
 		elseif (actualPollution > worldBoss2SpawnPollution and worldBossSpawned[2] == false and worldBossActive[1] == false) then
