@@ -19,6 +19,9 @@ global.worldBossUnitGroup = nil
 last_position = {}
 
 event.on_nth_tick(100, function(e)
+	--if e.tick == 500 then --cannot put this in on_init, because randomizeSpawnLocation() uses tile-collision to check if placement is valid. Tiles are not loaded on "on_init"
+		
+	--end
 	--game.print("nth-tick")
 	--for i, thisAccumulator in pairs(game.surfaces["nauvis"].find_entities_filtered({type = "accumulator"})) do
 		-- game.print(thisAccumulator.energy .. " --> [gps=" .. thisAccumulator.position.x .. "," .. thisAccumulator.position.y .. "]")
@@ -102,31 +105,38 @@ function searchForSpawnerToSpawn()
 	until (#spawner > 0)
 	return spawner[1]
 end
-function randomizeSpawnLocation()
-	local spawntile
+function randomizeSpawnLocation(howManyLocations)
+	local spawnTile
 	local xSpawn
 	local ySpawn
-	local position
-	repeat
-		repeat 
-			xSpawn = math.random(-1000, 1000)
+	local positionx = {}
+	local positiony = {}
+	for locationNo = 1, howManyLocations, 1 do
+		if math.random(0,1) == 0 then
+			xSpawn = math.random(-5000, -1000)
+		else
+			xSpawn = math.random(1000, 5000)
 			--game.print("Randomizing x: " .. xSpawn)
-		until (xSpawn > 250 or xSpawn < -250)
-		repeat 
-			ySpawn = math.random(-1000, 1000)
-			--game.print("Randomizing y: " .. ySpawn)
-		until (ySpawn > 250 or ySpawn < -250)
-		position = {xSpawn, ySpawn}
-		spawntile = game.surfaces["nauvis"].get_tile(position)
-	until (spawntile.valid and spawntile.collides_with("player-layer") == false)
-	return position
+		end
+			if math.random(0,1) == 0 then
+				ySpawn = math.random(-5000, -1000)
+			else
+				ySpawn = math.random(1000, 5000)
+				--game.print("Randomizing y: " .. ySpawn)
+			end
+			positionx[locationNo] = xSpawn
+			positiony[locationNo] = ySpawn
+end
+return positionx, positiony
 end
 event.on_init(function()
-	local j = 0
 	game.surfaces["nauvis"].create_entity{name="dungeonEntrance", position={1, 1}, force="neutral"} --how is the map built up? max coordinates??
-	for i = 0, 100, 1 do
-		game.surfaces["nauvis"].create_entity{name="dungeonEntrance", position={math.random(-1000, 1000),math.random(-1000, 1000)}, force="neutral"} --how is the map built up? max coordinates??
+	local howManySpawnLocations = 100
+	local spawnPositionx, spawnPositiony = randomizeSpawnLocation(howManySpawnLocations)
+	for locationNo = 1, howManySpawnLocations, 1 do
+		game.surfaces["nauvis"].create_entity{name="dungeonEntrance", position={spawnPositionx[locationNo],spawnPositiony[locationNo]}, force="neutral"} --how is the map built up? max coordinates??
 	end
+
 	global.dungeonSurface = game.create_surface("dungeon")
   	global.dungeonSurface.daytime = 1
   	global.dungeonSurface.freeze_daytime = true
