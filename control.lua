@@ -5,7 +5,14 @@ local migration = require("__flib__.migration")
 
 ---BALANCE PARAMETERS
 local worldBoss1SpawnPollution = 10000
-local worldBoss1Spawned = false
+local worldBoss2SpawnPollution = 100000
+
+local worldBossSpawned = {}
+local worldBossActive = {}
+for i = 0, 10, 1 do -- no better way to put standard array value in LUA?
+	worldBossSpawned[i] = false
+	worldBossActive[i] = false
+end
 global.worldBoss = nil
 global.worldBossUnitGroup = nil
 
@@ -20,6 +27,7 @@ event.on_nth_tick(100, function(e)
 		--end
 	--break
 	--end
+	game.print(global.worldBoss)
 	if global.worldBoss ~= nil then
 		--game.print(global.worldBossUnitGroup.state)
 		--global.worldBossUnitGroup.start_moving()
@@ -32,54 +40,68 @@ event.on_nth_tick(100, function(e)
 			--})
 		--end
 		if game.players[1].force.technologies["researchWorldBossPing"].researched then
-			if #game.surfaces["nauvis"].find_entities_filtered({type = "radar"}) >= 1 then
+			if (#game.surfaces["nauvis"].find_entities_filtered({type = "radar"}) >= 1 and e.tick%1000 == 0) then
 				game.print("World Boss Location: [gps=" .. global.worldBoss.position.x .. "," .. global.worldBoss.position.y .. "]")
 			end
 		end
 	else
 		local actualPollution = game.surfaces[1].get_total_pollution()
 			game.print ("Actual pollution now is " .. actualPollution)
-		if (actualPollution > worldBoss1SpawnPollution and worldBoss1Spawned == false) then
-			--local spawnLocation = randomizeSpawnLocation()
-			game.print("Pollution is so high that a massive alien was spawned into this world. Get ready to fight!",{r=1, g=0, b=0, a=1})
-			--game.print("World Boss Spawn Location [gps=" .. spawnLocation[1] .. "," .. spawnLocation[2] .. "]")
-			local searchRadius = 100
-			local playerPosition = game.players[1].position;
-			game.print("searching nearest biter spawner for player position")
-			local spawner
-			local i = 0
-			repeat
-				i = i + 1
-				game.print("search No. " .. i)
-				spawner = game.surfaces[1].find_entities_filtered{area={{playerPosition.x-searchRadius,playerPosition.y-searchRadius},{playerPosition.x+searchRadius,playerPosition.y+searchRadius}}, type="unit-spawner"};
-				game.print("Found " .. #spawner .. " spawners")
-				if (searchRadius == 20000) then 
-					game.print("Cannot find spawner")
-					break 
-				end
-				if (#spawner == 0) then 
-					game.print("Increasing search radius") 
-					searchRadius = searchRadius + 100
-				end
-			until (#spawner > 0)
-			game.print("Spawning World Boss")
-			global.worldBoss = game.surfaces["nauvis"].create_entity{name="worldBoss1", position=spawner[1].position, force="enemy"} 
-			global.worldBoss.set_command({
-				type = defines.command.attack_area,
-				radius = 10,
-				destination = {-1,1},
-				distraction = defines.distraction.by_enemy
-				})
-			global.worldBossUnitGroup = game.surfaces[1].create_unit_group{position = spawner[1].position, force = "enemy"} 
-			global.worldBossUnitGroup.add_member(global.worldBoss)
-			game.print("worldBossUnitGroup has " .. #global.worldBossUnitGroup.members .. " members")
-			global.worldBossUnitGroup.set_autonomous()
-			--global.worldBossUnitGroup.start_moving()
-			worldBoss1Spawned = true
+		if (actualPollution > worldBoss1SpawnPollution and worldBossSpawned[1] == false) then
+			global.worldBoss = spawnWorldboss(1)
+		elseif (actualPollution > worldBoss2SpawnPollution and worldBossSpawned[2] == false and worldBossActive[1] == false) then
+			global.worldBoss = spawnWorldboss(2)
 		end
 	end
 
 end)
+
+function spawnWorldboss(thisWorldBossNo)
+	--local spawnLocation = randomizeSpawnLocation() --legacy code, when Worldboss was spawned somewhere randomly on the map, now: Worldboss spawned at nearest Spawner location to player 1 coords.
+	game.print("Pollution is so high that a massive alien was spawned into this world. Get ready to fight!",{r=1, g=0, b=0, a=1})
+	--game.print("World Boss Spawn Location [gps=" .. spawnLocation[1] .. "," .. spawnLocation[2] .. "]")
+	local spawner = searchForSpawnerToSpawn()
+	
+	game.print("Spawning World Boss")
+	worldBoss = game.surfaces["nauvis"].create_entity{name="worldBoss" .. thisWorldBossNo, position=spawner.position, force="enemy"} 
+	worldBoss1active = true
+	worldBoss.set_command({
+		type = defines.command.attack_area,
+		radius = 10,
+		destination = {-1,1},
+		distraction = defines.distraction.by_enemy
+		})
+	global.worldBossUnitGroup = game.surfaces[1].create_unit_group{position = spawner.position, force = "enemy"} 
+	global.worldBossUnitGroup.add_member(worldBoss)
+	game.print("worldBossUnitGroup has " .. #global.worldBossUnitGroup.members .. " members")
+	global.worldBossUnitGroup.set_autonomous()
+	--global.worldBossUnitGroup.start_moving()
+	worldBossSpawned[thisWorldBossNo] = true
+	worldBossActive[thisWorldBossNo] = true
+	return worldBoss
+end
+function searchForSpawnerToSpawn()
+	local searchRadius = 100
+	local playerPosition = game.players[1].position;
+	game.print("searching nearest biter spawner for player position")
+	
+	local i = 0
+	repeat
+		i = i + 1
+		game.print("search No. " .. i)
+		spawner = game.surfaces[1].find_entities_filtered{area={{playerPosition.x-searchRadius,playerPosition.y-searchRadius},{playerPosition.x+searchRadius,playerPosition.y+searchRadius}}, type="unit-spawner"};
+		game.print("Found " .. #spawner .. " spawners")
+		if (searchRadius == 20000) then 
+			game.print("Cannot find spawner")
+			break 
+		end
+		if (#spawner == 0) then 
+			game.print("Increasing search radius") 
+			searchRadius = searchRadius + 100
+		end
+	until (#spawner > 0)
+	return spawner[1]
+end
 function randomizeSpawnLocation()
 	local spawntile
 	local xSpawn
@@ -145,10 +167,11 @@ end)
 
 
 event.on_entity_died(function(e)
-	game.print("destroyed something")
-	if (e.entity.name =="imbaStoneWall") then
-		game.print("destroyed wall")
-		global.dungeonSurface.create_entity{name = e.entity.name, position = {e.entity.position.x,e.entity.position.y}, force =e.entity.force,direction= e.entity.direction}
+	--game.print(string.sub(e.entity.name,0,9)) --"worldBoss"
+	if (string.sub(e.entity.name,0,9) == "worldBoss") then
+		game.print(string.sub(e.entity.name,10)) -- Worldboss Number
+		worldBossActive[tonumber(string.sub(e.entity.name,10))] = false
+		global.worldBoss = nil
 	end 
 end)
 script.on_event("my-custom-input", function(event) -- Hotkey K for creating dungeon entrance near player to test
@@ -162,7 +185,7 @@ script.on_event("my-custom-input", function(event) -- Hotkey K for creating dung
 			local yPlus = math.random(-50,50)
 		end
 		player.surface.create_entity{name="dungeonEntrance", position={player.position.x+xPlus, player.position.y+yPlus}, force="neutral"} 
-		player.surface.create_entity{name="worldBoss1", position={player.position.x+xPlus, player.position.y+yPlus}, force="enemy"} 
+		-- local testBoss = player.surface.create_entity{name="worldBoss1", position={player.position.x+xPlus, player.position.y+yPlus}, force="enemy"} 
 
 	end
 end)
